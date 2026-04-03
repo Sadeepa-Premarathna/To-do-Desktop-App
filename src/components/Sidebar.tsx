@@ -1,3 +1,5 @@
+import React from 'react';
+
 interface SidebarProps {
   activePage: Page;
   setActivePage: (page: Page) => void;
@@ -7,7 +9,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activePage, setActivePage, stats, theme, toggleTheme }: SidebarProps) {
-  const navItems: { id: Page; label: string; icon: JSX.Element; badge?: number }[] = [
+  const navItems: { id: Page; label: string; icon: React.ReactNode; badge?: number }[] = [
     {
       id: 'dashboard', label: 'Dashboard',
       icon: (

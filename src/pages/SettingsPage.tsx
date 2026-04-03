@@ -1,3 +1,4 @@
+import React from 'react';
 import type { Theme } from '../App';
 
 interface SettingsPageProps {
@@ -7,7 +8,7 @@ interface SettingsPageProps {
 
 function SettingsSection({ title, icon, iconBg, children }: {
   title: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
   iconBg: string;
   children: React.ReactNode;
 }) {
