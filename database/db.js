@@ -3,7 +3,6 @@ const path = require("path");
 
 const db = new Database(path.join(__dirname, "..", "tasks.db"));
 
-// Create table
 db.prepare(`
   CREATE TABLE IF NOT EXISTS tasks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -17,7 +16,7 @@ db.prepare(`
   )
 `).run();
 
-// Migrate existing DB: add missing columns
+
 const cols = db.prepare("PRAGMA table_info(tasks)").all().map(c => c.name);
 if (!cols.includes("completed"))  db.prepare("ALTER TABLE tasks ADD COLUMN completed INTEGER DEFAULT 0").run();
 if (!cols.includes("priority"))   db.prepare("ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT 'medium'").run();

@@ -11,20 +11,14 @@ export type Theme = 'light' | 'dark';
 
 function App() {
   const [activePage, setActivePage] = useState<Page>('dashboard');
-  
-  // Theme Management
   const [theme, setTheme] = useState<Theme>('dark');
-  
   const [tasks, setTasks] = useState<Task[]>([]);
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
-  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
 
-  // Initialize theme
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme) {
@@ -35,19 +29,18 @@ function App() {
     }
   }, []);
 
-  // Apply theme to body
   useEffect(() => {
     if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
       document.body.classList.add('dark');
     } else {
+      document.documentElement.classList.remove('dark');
       document.body.classList.remove('dark');
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  };
+  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ message, type });
@@ -69,21 +62,19 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const handleSaveTask = async (taskData: any) => {
     try {
       if (taskData.id) {
         await window.todoAPI.updateTask(
-          taskData.id, taskData.title, taskData.description, 
+          taskData.id, taskData.title, taskData.description,
           taskData.priority, taskData.category, taskData.due_date
         );
         showToast("Task updated successfully");
       } else {
         await window.todoAPI.addTask(
-          taskData.title, taskData.description, 
+          taskData.title, taskData.description,
           taskData.priority, taskData.category, taskData.due_date
         );
         showToast("Task created successfully");
@@ -92,118 +83,86 @@ function App() {
       setIsModalOpen(false);
       setEditingTask(null);
       loadData();
-    } catch (err) {
+    } catch {
       showToast("An error occurred", 'error');
     }
   };
 
   const handleToggleTask = async (id: number) => {
-    try {
-      await window.todoAPI.toggleComplete(id);
-      loadData();
-    } catch (err) {
-      showToast("Error updating task", 'error');
-    }
+    try { await window.todoAPI.toggleComplete(id); loadData(); }
+    catch { showToast("Error updating task", 'error'); }
   };
 
   const handleDeleteTask = async (id: number) => {
     if (!confirm("Are you sure you want to delete this task?")) return;
-    try {
-      await window.todoAPI.deleteTask(id);
-      showToast("Task deleted");
-      loadData();
-    } catch (err) {
-      showToast("Error deleting task", 'error');
-    }
+    try { await window.todoAPI.deleteTask(id); showToast("Task deleted"); loadData(); }
+    catch { showToast("Error deleting task", 'error'); }
   };
 
   const handleClearCompleted = async () => {
     if (!confirm("Delete all completed tasks? This cannot be undone.")) return;
-    try {
-      await window.todoAPI.clearCompleted();
-      showToast("Completed tasks cleared");
-      loadData();
-    } catch (err) {
-      showToast("Error clearing tasks", 'error');
-    }
-  };
-
-  const openEditModal = (task: Task) => {
-    setEditingTask(task);
-    setIsModalOpen(true);
-  };
-
-  const openNewModal = () => {
-    setEditingTask(null);
-    setIsModalOpen(true);
+    try { await window.todoAPI.clearCompleted(); showToast("Completed tasks cleared"); loadData(); }
+    catch { showToast("Error clearing tasks", 'error'); }
   };
 
   return (
-    <div className={`flex h-screen w-full transition-colors duration-500 overflow-hidden relative ${theme === 'dark' ? 'dark text-slate-200' : 'text-slate-800'}`}>
-      <Sidebar 
-        activePage={activePage} 
-        setActivePage={setActivePage} 
-        stats={stats} 
+    <div className={`flex h-screen w-full overflow-hidden ${theme === 'dark' ? 'dark' : ''}`}
+         style={{ background: 'var(--bg-page)', color: 'var(--text-primary)' }}>
+
+      <Sidebar
+        activePage={activePage}
+        setActivePage={setActivePage}
+        stats={stats}
         theme={theme}
         toggleTheme={toggleTheme}
       />
 
-      <main className="flex-1 overflow-x-hidden relative z-10 p-8 h-full">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden relative" style={{ padding: '2rem 2.5rem' }}>
         {activePage === 'dashboard' && (
-          <DashboardPage 
-            stats={stats} 
-            recentTasks={tasks.slice(0, 3)} 
-            setActivePage={setActivePage} 
+          <DashboardPage
+            stats={stats}
+            recentTasks={tasks.slice(0, 3)}
+            setActivePage={setActivePage}
           />
         )}
-        
         {activePage === 'tasks' && (
-          <TasksPage 
-            tasks={tasks} 
+          <TasksPage
+            tasks={tasks}
             onToggleTask={handleToggleTask}
-            onEditTask={openEditModal}
+            onEditTask={(task) => { setEditingTask(task); setIsModalOpen(true); }}
             onDeleteTask={handleDeleteTask}
-            onOpenNewModal={openNewModal}
+            onOpenNewModal={() => { setEditingTask(null); setIsModalOpen(true); }}
           />
         )}
-        
         {activePage === 'completed' && (
-          <CompletedPage 
-            tasks={completedTasks} 
+          <CompletedPage
+            tasks={completedTasks}
             onToggleTask={handleToggleTask}
             onDeleteTask={handleDeleteTask}
             onClearAll={handleClearCompleted}
           />
         )}
-        
         {activePage === 'settings' && (
-          <SettingsPage 
-            theme={theme}
-            toggleTheme={toggleTheme}
-          />
+          <SettingsPage theme={theme} toggleTheme={toggleTheme} />
         )}
       </main>
 
-      <TaskModal 
+      <TaskModal
+        key={isModalOpen ? (editingTask?.id ?? 'new') : 'closed'}
         isOpen={isModalOpen}
         onClose={() => { setIsModalOpen(false); setEditingTask(null); }}
         onSave={handleSaveTask}
         task={editingTask}
       />
 
-      {/* Toast Integration */}
       {toast && (
-        <div className={`fixed bottom-6 right-6 px-6 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 animate-slide-in ${
-          toast.type === 'error' 
-            ? 'bg-rose-500/90 text-white backdrop-blur-md' 
-            : 'bg-white/90 dark:bg-slate-800/90 text-slate-900 dark:text-white backdrop-blur-md border border-slate-200 dark:border-white/10'
-        }`}>
+        <div className={`toast ${toast.type === 'error' ? 'toast-error' : 'toast-success'}`}>
           {toast.type === 'success' && (
-            <svg className="w-5 h-5 text-emerald-500 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: '#6366f1', flexShrink: 0 }}>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
             </svg>
           )}
-          <span className="font-medium text-sm">{toast.message}</span>
+          <span>{toast.message}</span>
         </div>
       )}
     </div>

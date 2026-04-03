@@ -7,6 +7,16 @@ interface TaskModalProps {
   task?: Task | null;
 }
 
+const Label = ({ children }: { children: React.ReactNode }) => (
+  <label style={{
+    display: 'block', fontSize: '0.75rem', fontWeight: 700,
+    letterSpacing: '0.06em', textTransform: 'uppercase',
+    color: 'var(--text-secondary)', marginBottom: '0.45rem',
+  }}>
+    {children}
+  </label>
+);
+
 export function TaskModal({ isOpen, onClose, onSave, task }: TaskModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -22,11 +32,8 @@ export function TaskModal({ isOpen, onClose, onSave, task }: TaskModalProps) {
       setCategory(task.category);
       setDueDate(task.due_date || '');
     } else {
-      setTitle('');
-      setDescription('');
-      setPriority('medium');
-      setCategory('Personal');
-      setDueDate('');
+      setTitle(''); setDescription('');
+      setPriority('medium'); setCategory('Personal'); setDueDate('');
     }
   }, [task, isOpen]);
 
@@ -35,44 +42,55 @@ export function TaskModal({ isOpen, onClose, onSave, task }: TaskModalProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    
-    onSave({
-      id: task?.id,
-      title,
-      description,
-      priority,
-      category,
-      due_date: dueDate || null
-    });
+    onSave({ id: task?.id, title, description, priority, category, due_date: dueDate || null });
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-md animate-fade-in">
-      <div 
-        className="glass-panel w-full max-w-[500px] border-0 rounded-[2rem] p-8 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)] animate-scale-in bg-white/90 dark:bg-slate-800/90"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">
-            {task ? 'Edit Task' : 'New Task'}
-          </h2>
-          <button 
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: 'var(--accent-soft)', display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--accent)' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={task ? "M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" : "M12 4v16m8-8H4"} />
+              </svg>
+            </div>
+            <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {task ? 'Edit Task' : 'New Task'}
+            </h2>
+          </div>
+          <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 p-2.5 rounded-full transition-colors"
+            style={{
+              border: 'none', background: 'var(--bg-input)', borderRadius: 8,
+              width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: 'var(--text-muted)',
+              transition: 'background 0.2s, color 0.2s',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)'; }}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <hr className="divider" style={{ marginBottom: '1.4rem' }} />
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
           <div>
-            <label className="block text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">Task Title <span className="text-rose-400">*</span></label>
+            <Label>Task Title <span style={{ color: '#ef4444' }}>*</span></Label>
             <input
               autoFocus
-              className="glass-input w-full rounded-2xl px-5 py-4 placeholder-slate-400/70 border-0 shadow-sm text-[15px] font-medium"
-              placeholder="What do you need to get done?"
+              className="ui-input"
+              placeholder="What needs to be done?"
               value={title}
               onChange={e => setTitle(e.target.value)}
               required
@@ -80,68 +98,52 @@ export function TaskModal({ isOpen, onClose, onSave, task }: TaskModalProps) {
           </div>
 
           <div>
-            <label className="block text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">Description</label>
+            <Label>Description</Label>
             <textarea
-              className="glass-input w-full rounded-2xl px-5 py-4 h-28 resize-none placeholder-slate-400/70 border-0 shadow-sm text-[15px]"
-              placeholder="Add some details... (optional)"
+              className="ui-input"
+              placeholder="Add details... (optional)"
               value={description}
               onChange={e => setDescription(e.target.value)}
+              style={{ height: '100px', resize: 'none', lineHeight: 1.6 }}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-5">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.9rem' }}>
             <div>
-              <label className="block text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">Priority</label>
-              <select
-                className="glass-input w-full rounded-2xl px-4 py-3.5 text-[14px] font-semibold appearance-none bg-transparent border-0 shadow-sm"
-                value={priority}
-                onChange={e => setPriority(e.target.value as Priority)}
-              >
-                <option value="low" className="text-slate-800 dark:text-white dark:bg-slate-800">Low Priority</option>
-                <option value="medium" className="text-slate-800 dark:text-white dark:bg-slate-800">Medium Priority</option>
-                <option value="high" className="text-slate-800 dark:text-white dark:bg-slate-800">High Priority</option>
+              <Label>Priority</Label>
+              <select className="ui-input" value={priority} onChange={e => setPriority(e.target.value as Priority)}
+                style={{ cursor: 'pointer' }}>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
               </select>
             </div>
-            
             <div>
-              <label className="block text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">Category</label>
-              <select
-                className="glass-input w-full rounded-2xl px-4 py-3.5 text-[14px] font-semibold appearance-none bg-transparent border-0 shadow-sm"
-                value={category}
-                onChange={e => setCategory(e.target.value)}
-              >
-                <option value="Personal" className="text-slate-800 dark:text-white dark:bg-slate-800">Personal</option>
-                <option value="Work" className="text-slate-800 dark:text-white dark:bg-slate-800">Work</option>
-                <option value="Health" className="text-slate-800 dark:text-white dark:bg-slate-800">Health</option>
-                <option value="Shopping" className="text-slate-800 dark:text-white dark:bg-slate-800">Shopping</option>
-                <option value="Education" className="text-slate-800 dark:text-white dark:bg-slate-800">Education</option>
+              <Label>Category</Label>
+              <select className="ui-input" value={category} onChange={e => setCategory(e.target.value)}
+                style={{ cursor: 'pointer' }}>
+                <option>Personal</option>
+                <option>Work</option>
+                <option>Health</option>
+                <option>Shopping</option>
+                <option>Education</option>
               </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">Due Date</label>
-            <input
-              type="date"
-              className="glass-input w-full rounded-2xl px-5 py-3.5 text-[14px] font-semibold border-0 shadow-sm style-color-scheme-dark dark:style-color-scheme-dark"
-              value={dueDate}
-              onChange={e => setDueDate(e.target.value)}
-            />
+            <Label>Due Date</Label>
+            <input type="date" className="ui-input" value={dueDate} onChange={e => setDueDate(e.target.value)} />
           </div>
 
-          <div className="mt-10 pt-2 flex gap-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-5 py-4 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-white font-bold transition-colors"
-            >
+          <hr className="divider" style={{ marginTop: '0.3rem' }} />
+
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button type="button" onClick={onClose} className="btn-ghost" style={{ flex: 1, justifyContent: 'center' }}>
               Cancel
             </button>
-            <button
-              type="submit"
-              disabled={!title.trim()}
-              className="flex-[2] px-5 py-4 rounded-full bg-gradient-to-r from-teal-500 to-emerald-400 disabled:opacity-50 text-white font-bold shadow-[0_10px_20px_rgba(20,184,166,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
+            <button type="submit" disabled={!title.trim()} className="btn-accent"
+              style={{ flex: 2, justifyContent: 'center', opacity: title.trim() ? 1 : 0.5 }}>
               {task ? 'Update Task' : 'Save Task'}
             </button>
           </div>
